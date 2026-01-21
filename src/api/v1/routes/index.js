@@ -8,6 +8,7 @@ const appointmentsRouter = require('../modules/appointments/appointments.routes'
 const branchesRouter = require('../modules/branches/branches.routes');
 const promotionsRouter = require('../modules/promotions/promotions.routes');
 const ordersRouter = require('../modules/orders/orders.routes');
+const inventoryRouter = require('../modules/inventory/inventory.routes'); // New import
 
 const router = express.Router();
 
@@ -21,6 +22,7 @@ router.use('/appointments', appointmentsRouter);
 router.use('/branches', branchesRouter);
 router.use('/promotions', promotionsRouter);
 router.use('/orders', ordersRouter);
+router.use('/inventory', inventoryRouter); // New route
 
 module.exports = router;
 

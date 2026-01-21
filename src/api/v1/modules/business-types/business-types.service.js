@@ -24,9 +24,38 @@ const create = async (data) => {
   });
 
   logger.info(`Business type ${newBusinessType.id} created successfully.`);
-  return newBusinessType;
+  return newBusinessType.get({ plain: true });
+};
+
+/**
+ * Retrieves all business types.
+ * For public listing, we only return essential fields.
+ * @returns {Promise<Array<object>>} A list of business types.
+ */
+const getAll = async () => {
+  logger.info('Service: Fetching all business types for public listing.');
+  const businessTypes = await models.business_types.findAll();
+  return businessTypes;
+};
+
+/**
+ * Retrieves a single business type by its ID, including its config template.
+ * @param {number} id - The ID of the business type.
+ * @returns {Promise<object>} The business type.
+ */
+const getById = async (id) => {
+  logger.info(`Service: Fetching business type with ID: ${id}`);
+  const businessType = await models.business_types.findByPk(id);
+
+  if (!businessType) {
+    throw boom.notFound('Business type not found.');
+  }
+
+  return businessType.get({ plain: true });
 };
 
 module.exports = {
   create,
+  getAll,
+  getById,
 };

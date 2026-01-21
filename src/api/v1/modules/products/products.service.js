@@ -21,12 +21,12 @@ const createProduct = async (productData, businessId) => {
 };
 
 /**
- * Lists all products for a given business.
+ * Lists all products for a given business, including their stock for a specific branch.
  * It also validates that the user has access to the requested branch.
  * @param {number} businessId - The ID of the business from the user's token.
  * @param {number} userBranchId - The ID of the branch from the user's token.
  * @param {number} queryBranchId - The optional branchId from the query params.
- * @returns {Promise<Array>} A list of products.
+ * @returns {Promise<Array>} A list of products with their stock.
  */
 const listByBusiness = async (businessId, userBranchId, queryBranchId) => {
   const targetBranchId = queryBranchId || userBranchId;
@@ -44,17 +44,57 @@ const listByBusiness = async (businessId, userBranchId, queryBranchId) => {
     throw boom.forbidden('You do not have access to this branch.');
   }
 
-  logger.info(`Fetching all products for business ${businessId}`);
+  logger.info(`Fetching all products for business ${businessId} including stock for branch ${targetBranchId}`);
 
   const products = await models.products.findAll({
     where: { business_id: businessId },
+    include: [
+      {
+        model: models.inventory,
+        as: 'stock',
+        where: { branch_id: targetBranchId },
+        required: false, // Use LEFT JOIN to include products without an inventory record
+        attributes: ['quantity'] // Only include the quantity field
+      }
+    ],
     order: [['name', 'ASC']],
   });
 
-  return products;
+  // Clean up the response to have a consistent structure
+  return products.map(product => {
+    const plainProduct = product.get({ plain: true });
+    // If stock is null (no inventory record), present it as { quantity: 0 }
+    plainProduct.stock = plainProduct.stock || { quantity: '0.0000' };
+    return plainProduct;
+  });
+};
+
+/**
+ * Updates an existing product for a specific business.
+ * @param {number} productId - The ID of the product to update.
+ * @param {number} businessId - The ID of the business from the user's token.
+ * @param {object} updateData - The data to update the product with.
+ * @returns {Promise<object>} The updated product.
+ */
+const updateProduct = async (productId, businessId, updateData) => {
+  logger.info(`Updating product ${productId} for business ${businessId}`);
+
+  const product = await models.products.findOne({
+    where: { id: productId, business_id: businessId },
+  });
+
+  if (!product) {
+    throw boom.notFound('Product not found or does not belong to your business.');
+  }
+
+  await product.update(updateData);
+
+  logger.info(`Product ${productId} updated successfully for business ${businessId}`);
+  return product.get({ plain: true });
 };
 
 module.exports = {
   createProduct,
   listByBusiness,
+  updateProduct,
 };

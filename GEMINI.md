@@ -591,12 +591,15 @@ Asumiendo que el `businessTypeId` para "Boutique" es `7`.
 
 ### 4.3. Módulo de Tipos de Negocio (`Business Types`)
 
-Este módulo de administración permite crear las plantillas o "tipos" de negocio que el sistema ofrecerá.
+Este módulo de administración permite crear y consultar las plantillas o "tipos" de negocio que el sistema ofrecerá.
+
+#### 4.3.1. Crear Tipo de Negocio
 
 - **Endpoint:** `POST /api/v1/business-types`
 - **Permisos:** `OWNER`.
+- **Descripción:** Crea una nueva plantilla de tipo de negocio.
 
-#### Payload de Ejemplo (Crear tipo "Estética")
+##### Payload de Ejemplo (Crear tipo "Estética")
 
 Asumiendo que la `categoryId` para "Servicios Personales" es `3`.
 
@@ -622,6 +625,46 @@ Asumiendo que la `categoryId` para "Servicios Personales" es `3`.
   }
 }
 ```
+
+#### 4.3.2. Listar Tipos de Negocio
+
+- **Endpoint:** `GET /api/v1/business-types`
+- **Permisos:** Público.
+- **Descripción:** Devuelve una lista de todos los tipos de negocio disponibles en la plataforma. Esta lista es ideal para mostrar en una pantalla de registro donde el usuario elige el giro de su negocio. No se devuelve el `configTemplate` completo para mantener la respuesta ligera.
+
+##### Ejemplo de Respuesta (`200 OK`)
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Restaurante",
+    "icon": "restaurant",
+    "description": "Negocios de venta de comida con gestión de mesas y recetas.",
+    "category_id": 1
+  },
+  {
+    "id": 4,
+    "name": "Barbería y Peluquería",
+    "icon": "content_cut",
+    "description": "Negocios enfocados en servicios de belleza y cuidado personal.",
+    "category_id": 3
+  },
+  {
+    "id": 5,
+    "name": "Carwash",
+    "icon": "local_car_wash",
+    "description": "Servicios de lavado y detallado de vehículos.",
+    "category_id": 2
+  }
+]
+```
+
+#### 4.3.3. Obtener un Tipo de Negocio por ID
+
+- **Endpoint:** `GET /api/v1/business-types/:id`
+- **Permisos:** Público.
+- **Descripción:** Devuelve los detalles completos de un tipo de negocio específico, incluyendo su `configTemplate`.
 
 ### 4.4. Módulo de Productos (`Products`)
 
@@ -674,11 +717,105 @@ Permite la gestión del catálogo de productos y servicios del negocio.
 
 - **Endpoint:** `GET /api/v1/products`
 - **Permisos:** `OWNER`, `MANAGER`, `CASHIER`, `WAITER`.
-- **Parámetros de Consulta:** `?branchId=<id>` (opcional).
+- **Descripción:** Devuelve una lista de todos los productos del negocio, **incluyendo la cantidad de stock disponible para una sucursal específica.**
+- **Parámetros de Consulta:** `?branchId=<id>` (opcional). Si no se provee, se usa la sucursal del usuario en sesión.
 
 ##### Ejemplo de Uso
 
-`GET /api/v1/products?branchId=3` (Devuelve todos los productos del negocio, validando que el usuario tiene acceso a la sucursal 3).
+`GET /api/v1/products?branchId=3`
+
+##### Ejemplo de Respuesta (`200 OK`)
+
+```json
+[
+    {
+        "id": 102,
+        "business_id": 1,
+        "name": "Coca-Cola 600ml No Retornable",
+        "product_type": "SIMPLE",
+        "price": "18.00",
+        "cost": "11.50",
+        "sku": "7501055300077",
+        "sat_product_code": "50202301",
+        "sat_unit_code": "H87",
+        "tax_object": "02",
+        "taxes_config": null,
+        "stock": {
+            "quantity": "94.0000"
+        }
+    },
+    {
+        "id": 105,
+        "business_id": 1,
+        "name": "Jamón de Pavo (por Kg)",
+        "product_type": "SIMPLE",
+        "price": "220.00",
+        "cost": "150.00",
+        "sku": "ABDP-JAMON-PAVO",
+        "sat_product_code": "50111802",
+        "sat_unit_code": "KGM",
+        "tax_object": "02",
+        "taxes_config": null,
+        "stock": {
+            "quantity": "4.3000"
+        }
+    },
+    {
+        "id": 108,
+        "business_id": 1,
+        "name": "Producto sin Stock",
+        "product_type": "SIMPLE",
+        "price": "50.00",
+        "cost": "25.00",
+        "sku": "NO-STOCK-ITEM",
+        "sat_product_code": "01010101",
+        "sat_unit_code": "H87",
+        "tax_object": "02",
+        "taxes_config": null,
+        "stock": {
+            "quantity": "0.0000"
+        }
+    }
+]
+```
+
+#### 4.4.3. Actualizar un Producto
+
+- **Endpoint:** `PATCH /api/v1/products/{id}`
+- **Permisos:** `OWNER`, `MANAGER`.
+- **Descripción:** Actualiza los detalles de un producto existente. Permite modificar uno o varios campos del producto. Este endpoint es válido para cualquier giro de negocio y no aplica las restricciones de `product_type` o `businessCategory` que se usan en la creación.
+- **Parámetros de Ruta:**
+    - `id` (obligatorio): ID numérico del producto a actualizar.
+
+##### Payload de Ejemplo (Actualizar Precio y SKU)
+
+```json
+{
+  "price": 20.00,
+  "sku": "7501055300077-V2"
+}
+```
+
+##### Ejemplo de Respuesta (`200 OK`)
+
+```json
+{
+  "message": "Product updated successfully",
+  "data": {
+    "id": 102,
+    "business_id": 1,
+    "name": "Coca-Cola 600ml No Retornable",
+    "product_type": "SIMPLE",
+    "price": "20.00",
+    "cost": "11.50",
+    "sku": "7501055300077-V2",
+    "sat_product_code": "50202301",
+    "sat_unit_code": "H87",
+    "tax_object": "02",
+    "taxes_config": null
+  }
+}
+```
 
 ### 4.5. Módulo de Citas (`Appointments`)
 
@@ -784,5 +921,51 @@ El corazón del POS, permite registrar ventas aplicando la lógica de negocio.
       "quantity": 1
     }
   ]
+}
+```
+
+### 4.8. Módulo de Inventario (`Inventory`)
+
+Permite la gestión de los niveles de stock de los productos en las diferentes sucursales.
+
+#### 4.8.1. Ajustar Inventario de Producto por Sucursal
+
+- **Endpoint:** `PATCH /api/v1/inventory/products/{productId}/branches/{branchId}`
+- **Permisos:** `OWNER`, `MANAGER`.
+- **Descripción:** Ajusta la cantidad de stock de un producto específico en una sucursal determinada. Permite sumar o restar unidades/kilogramos al inventario actual. Si no existe un registro de inventario para el producto en esa sucursal, se creará uno con la cantidad del ajuste.
+- **Parámetros de Ruta:**
+    - `productId` (obligatorio): ID numérico del producto.
+    - `branchId` (obligatorio): ID numérico de la sucursal.
+
+##### Payload de Ejemplo (Ajuste Positivo - Entrada de 50 piezas)
+
+```json
+{
+  "adjustment": 50.0000,
+  "reason": "Entrada por compra a proveedor X"
+}
+```
+
+##### Payload de Ejemplo (Ajuste Negativo - Merma de 0.5 Kg)
+
+```json
+{
+  "adjustment": -0.5000,
+  "reason": "Merma por producto dañado"
+}
+```
+
+##### Ejemplo de Respuesta (`200 OK`)
+
+```json
+{
+  "message": "Product inventory adjusted successfully",
+  "data": {
+    "id": 1,
+    "branch_id": 1,
+    "item_id": 102,
+    "item_type": "PRODUCT",
+    "quantity": "144.0000"
+  }
 }
 ```

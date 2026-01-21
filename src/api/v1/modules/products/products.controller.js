@@ -45,7 +45,31 @@ const listProducts = async (req, res, next) => {
   }
 };
 
+/**
+ * Handles the request to update an existing product.
+ */
+const updateProduct = async (req, res, next) => {
+  try {
+    const { id: productId } = req.params;
+    const { body: updateData } = req;
+    const { businessId } = req.user;
+
+    logger.info(`Controller: Received request to update product ${productId} for business ${businessId}`);
+
+    const updatedProduct = await productService.updateProduct(productId, businessId, updateData);
+
+    res.status(200).json({
+      message: 'Product updated successfully',
+      data: updatedProduct,
+    });
+  } catch (error) {
+    logger.error(`Error updating product: ${error.message}`, { stack: error.stack });
+    next(error);
+  }
+};
+
 module.exports = {
   createProduct,
   listProducts,
+  updateProduct,
 };

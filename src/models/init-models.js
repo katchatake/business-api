@@ -121,6 +121,15 @@ function initModels(sequelize) {
   user_sessions.belongsTo(users, { as: "user", foreignKey: "user_id"});
   users.hasMany(user_sessions, { as: "user_sessions", foreignKey: "user_id"});
 
+  products.hasOne(inventory, {
+    foreignKey: 'item_id',
+    constraints: false,
+    scope: {
+      item_type: 'PRODUCT'
+    },
+    as: 'stock'
+  });
+
   return {
     appointments,
     branches,

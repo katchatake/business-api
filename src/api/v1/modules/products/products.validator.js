@@ -21,6 +21,16 @@ const createProductSchema = Joi.object({
   tax_object: taxObject.optional().default('02'),
 });
 
+const updateProductSchema = Joi.object({
+  name: name.optional(),
+  price: price.optional(),
+  cost: cost.optional(),
+  sku: sku.optional(),
+  sat_product_code: satProductCode.optional(),
+  sat_unit_code: satUnitCode.optional(),
+  tax_object: taxObject.optional(),
+});
+
 const getProductSchema = Joi.object({
   id: id.required(),
 });
@@ -31,6 +41,7 @@ const listProductsSchema = Joi.object({
 
 module.exports = {
   createProductSchema,
+  updateProductSchema,
   getProductSchema,
   listProductsSchema,
 };
