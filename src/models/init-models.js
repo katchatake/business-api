@@ -90,6 +90,8 @@ function initModels(sequelize) {
   businesses.hasMany(users, { as: "users", foreignKey: "business_id"});
   orders.belongsTo(cash_shifts, { as: "shift", foreignKey: "shift_id"});
   cash_shifts.hasMany(orders, { as: "orders", foreignKey: "shift_id"});
+  orders.belongsTo(branches, { as: "branch", foreignKey: "branch_id"}); // NEW ASSOCIATION
+  branches.hasMany(orders, { as: "orders", foreignKey: "branch_id"}); // NEW ASSOCIATION
   appointments.belongsTo(customers, { as: "customer", foreignKey: "customer_id"});
   customers.hasMany(appointments, { as: "appointments", foreignKey: "customer_id"});
   order_items.belongsTo(orders, { as: "order", foreignKey: "order_id"});

@@ -53,6 +53,7 @@ const login = async (req) => {
 
   // 3. Generate Tokens with enriched payload
   const payload = {
+    userId: user.id,
     sub: user.id,
     role: user.role,
     branchId: user.branch_id,

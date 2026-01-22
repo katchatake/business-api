@@ -904,7 +904,14 @@ El corazón del POS, permite registrar ventas aplicando la lógica de negocio.
 - **Permisos:** `OWNER`, `MANAGER`, `CASHIER`, `WAITER`.
 - **Descripción:** Crea una nueva orden. El sistema calcula automáticamente los descuentos por promociones activas y el desglose de impuestos.
 
-##### Payload de Ejemplo
+#### 4.7.1. Crear una Orden
+
+- **Endpoint:** `POST /api/v1/orders`
+- **Permisos:** `OWNER`, `MANAGER`, `CASHIER`, `WAITER`.
+- **Descripción:** Crea una nueva orden, incluyendo sus ítems. Opcionalmente, puede procesar pagos y actualizar el estado de la orden a `COMPLETED` si los pagos cubren el total. **Además, el stock de productos de tipo `SIMPLE`, `SERVICE` y `VARIANT` se descuenta automáticamente del inventario de la sucursal.**
+- **Parámetros de Consulta:** `?branchId=<id>`, `?userId=<id>`, `?startDate=<date>`, `?endDate=<date>`, `?status=<status>`.
+
+##### Payload de Ejemplo (Orden con Pagos)
 
 ```json
 {
@@ -920,8 +927,164 @@ El corazón del POS, permite registrar ventas aplicando la lógica de negocio.
       "productId": 12,
       "quantity": 1
     }
+  ],
+  "payments": [
+    {
+      "payment_method": "CASH",
+      "amount": 250.00
+    },
+    {
+      "payment_method": "CARD",
+      "amount": 100.00
+    }
   ]
 }
+```
+
+##### Ejemplo de Respuesta (`200 OK`)
+
+```json
+{
+  "message": "Order created successfully with status COMPLETED.",
+  "data": {
+    "id": 123,
+    "business_id": 1,
+    "branch_id": 1,
+    "user_id": 5,
+    "customer_id": 3,
+    "status": "COMPLETED",
+    "order_type": "INSTORE",
+    "subtotal": "300.00",
+    "total_discount_amount": "0.00",
+    "total_tax_amount": "50.00",
+    "total": "350.00",
+    "invoice_status": "UNINVOICED",
+    "claim_code": null,
+    "metadata": null,
+    "created_date": "2026-01-15T10:00:00.000Z",
+    "order_items": [
+      {
+        "id": 1,
+        "order_id": 123,
+        "product_id": 10,
+        "product_variant_id": null,
+        "promotion_id": null,
+        "product_name": "Producto A",
+        "quantity": "2.0000",
+        "unit_price": "100.00",
+        "discount_amount": "0.00",
+        "tax_amount": "16.00",
+        "total_line": "232.00",
+        "attributes": null
+      },
+      {
+        "id": 2,
+        "order_id": 123,
+        "product_id": 12,
+        "product_variant_id": null,
+        "promotion_id": null,
+        "product_name": "Producto B",
+        "quantity": "1.0000",
+        "unit_price": "50.00",
+        "discount_amount": "0.00",
+        "tax_amount": "8.00",
+        "total_line": "58.00",
+        "attributes": null
+      }
+    ],
+    "order_payments": [
+      {
+        "id": 1,
+        "order_id": 123,
+        "payment_method": "CASH",
+        "amount": "250.00"
+      },
+      {
+        "id": 2,
+        "order_id": 123,
+        "payment_method": "CARD",
+        "amount": "100.00"
+      }
+    ]
+  }
+}
+```
+
+#### 4.7.2. Listar Órdenes
+
+- **Endpoint:** `GET /api/v1/orders`
+- **Permisos:** `OWNER`, `MANAGER`, `CASHIER`.
+- **Descripción:** Devuelve una lista de órdenes para el negocio del usuario autenticado. Permite filtrar por sucursal, cliente, estado, tipo de orden y rango de fechas.
+- **Parámetros de Consulta:**
+    - `branchId` (opcional): ID numérico de la sucursal.
+    - `customerId` (opcional): ID numérico del cliente.
+    - `status` (opcional): Estado de la orden (`PENDING`, `COMPLETED`, `CANCELLED`).
+    - `orderType` (opcional): Tipo de orden (`INSTORE`, `TAKEAWAY`, `DINE_IN`).
+    - `startDate` (opcional): Fecha de inicio para filtrar órdenes (formato ISO 8601).
+    - `endDate` (opcional): Fecha de fin para filtrar órdenes (formato ISO 8601).
+
+##### Ejemplo de Uso
+
+`GET /api/v1/orders?branchId=1&status=COMPLETED&startDate=2026-01-01T00:00:00Z`
+
+##### Ejemplo de Respuesta (`200 OK`)
+
+```json
+[
+  {
+    "id": 123,
+    "business_id": 1,
+    "branch_id": 1,
+    "user_id": 5,
+    "customer_id": 3,
+    "status": "COMPLETED",
+    "order_type": "INSTORE",
+    "subtotal": "300.00",
+    "total_discount_amount": "0.00",
+    "total_tax_amount": "50.00",
+    "total": "350.00",
+    "invoice_status": "UNINVOICED",
+    "claim_code": null,
+    "metadata": null,
+    "created_date": "2026-01-15T10:00:00.000Z",
+    "order_items": [
+      {
+        "id": 1,
+        "order_id": 123,
+        "product_id": 10,
+        "product_variant_id": null,
+        "promotion_id": null,
+        "product_name": "Producto A",
+        "quantity": "2.0000",
+        "unit_price": "100.00",
+        "discount_amount": "0.00",
+        "tax_amount": "16.00",
+        "total_line": "232.00",
+        "attributes": null
+      }
+    ],
+    "order_payments": [
+      {
+        "id": 1,
+        "order_id": 123,
+        "payment_method": "CASH",
+        "amount": "250.00"
+      }
+    ],
+    "branch": {
+      "id": 1,
+      "name": "Sucursal Principal"
+    },
+    "user": {
+      "id": 5,
+      "username": "cajero1"
+    },
+    "customer": {
+      "id": 3,
+      "name": "Cliente Frecuente"
+    }
+  }
+]
 ```
 
 ### 4.8. Módulo de Inventario (`Inventory`)
