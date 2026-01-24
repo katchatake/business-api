@@ -17,6 +17,8 @@ var _orders = require("./orders");
 var _platform_admins = require("./platform_admins");
 var _platform_audit_logs = require("./platform_audit_logs");
 var _platform_sessions = require("./platform_sessions");
+var _product_brands = require("./product_brands");
+var _product_categories = require("./product_categories");
 var _product_variants = require("./product_variants");
 var _products = require("./products");
 var _promotion_products = require("./promotion_products");
@@ -24,6 +26,7 @@ var _promotions = require("./promotions");
 var _recipes = require("./recipes");
 var _saas_invoices = require("./saas_invoices");
 var _saas_plans = require("./saas_plans");
+var _suppliers = require("./suppliers");
 var _supplies = require("./supplies");
 var _user_sessions = require("./user_sessions");
 var _users = require("./users");
@@ -47,6 +50,8 @@ function initModels(sequelize) {
   var platform_admins = _platform_admins(sequelize, DataTypes);
   var platform_audit_logs = _platform_audit_logs(sequelize, DataTypes);
   var platform_sessions = _platform_sessions(sequelize, DataTypes);
+  var product_brands = _product_brands(sequelize, DataTypes);
+  var product_categories = _product_categories(sequelize, DataTypes);
   var product_variants = _product_variants(sequelize, DataTypes);
   var products = _products(sequelize, DataTypes);
   var promotion_products = _promotion_products(sequelize, DataTypes);
@@ -54,6 +59,7 @@ function initModels(sequelize) {
   var recipes = _recipes(sequelize, DataTypes);
   var saas_invoices = _saas_invoices(sequelize, DataTypes);
   var saas_plans = _saas_plans(sequelize, DataTypes);
+  var suppliers = _suppliers(sequelize, DataTypes);
   var supplies = _supplies(sequelize, DataTypes);
   var user_sessions = _user_sessions(sequelize, DataTypes);
   var users = _users(sequelize, DataTypes);
@@ -78,20 +84,24 @@ function initModels(sequelize) {
   businesses.hasMany(business_csd, { as: "business_csds", foreignKey: "business_id"});
   customers.belongsTo(businesses, { as: "business", foreignKey: "business_id"});
   businesses.hasMany(customers, { as: "customers", foreignKey: "business_id"});
+  product_brands.belongsTo(businesses, { as: "business", foreignKey: "business_id"});
+  businesses.hasMany(product_brands, { as: "product_brands", foreignKey: "business_id"});
+  product_categories.belongsTo(businesses, { as: "business", foreignKey: "business_id"});
+  businesses.hasMany(product_categories, { as: "product_categories", foreignKey: "business_id"});
   products.belongsTo(businesses, { as: "business", foreignKey: "business_id"});
   businesses.hasMany(products, { as: "products", foreignKey: "business_id"});
   promotions.belongsTo(businesses, { as: "business", foreignKey: "business_id"});
   businesses.hasMany(promotions, { as: "promotions", foreignKey: "business_id"});
   saas_invoices.belongsTo(businesses, { as: "business", foreignKey: "business_id"});
   businesses.hasMany(saas_invoices, { as: "saas_invoices", foreignKey: "business_id"});
+  suppliers.belongsTo(businesses, { as: "business", foreignKey: "business_id"});
+  businesses.hasMany(suppliers, { as: "suppliers", foreignKey: "business_id"});
   supplies.belongsTo(businesses, { as: "business", foreignKey: "business_id"});
   businesses.hasMany(supplies, { as: "supplies", foreignKey: "business_id"});
   users.belongsTo(businesses, { as: "business", foreignKey: "business_id"});
   businesses.hasMany(users, { as: "users", foreignKey: "business_id"});
   orders.belongsTo(cash_shifts, { as: "shift", foreignKey: "shift_id"});
   cash_shifts.hasMany(orders, { as: "orders", foreignKey: "shift_id"});
-  orders.belongsTo(branches, { as: "branch", foreignKey: "branch_id"}); // NEW ASSOCIATION
-  branches.hasMany(orders, { as: "orders", foreignKey: "branch_id"}); // NEW ASSOCIATION
   appointments.belongsTo(customers, { as: "customer", foreignKey: "customer_id"});
   customers.hasMany(appointments, { as: "appointments", foreignKey: "customer_id"});
   order_items.belongsTo(orders, { as: "order", foreignKey: "order_id"});
@@ -102,6 +112,10 @@ function initModels(sequelize) {
   platform_admins.hasMany(platform_audit_logs, { as: "platform_audit_logs", foreignKey: "admin_id"});
   platform_sessions.belongsTo(platform_admins, { as: "admin", foreignKey: "admin_id"});
   platform_admins.hasMany(platform_sessions, { as: "platform_sessions", foreignKey: "admin_id"});
+  products.belongsTo(product_brands, { as: "brand", foreignKey: "brand_id"});
+  product_brands.hasMany(products, { as: "products", foreignKey: "brand_id"});
+  products.belongsTo(product_categories, { as: "category", foreignKey: "category_id"});
+  product_categories.hasMany(products, { as: "products", foreignKey: "category_id"});
   product_variants.belongsTo(products, { as: "product", foreignKey: "product_id"});
   products.hasMany(product_variants, { as: "product_variants", foreignKey: "product_id"});
   promotion_products.belongsTo(products, { as: "product", foreignKey: "product_id"});
@@ -114,6 +128,10 @@ function initModels(sequelize) {
   promotions.hasMany(promotion_products, { as: "promotion_products", foreignKey: "promotion_id"});
   businesses.belongsTo(saas_plans, { as: "saas_plan", foreignKey: "saas_plan_id"});
   saas_plans.hasMany(businesses, { as: "businesses", foreignKey: "saas_plan_id"});
+  products.belongsTo(suppliers, { as: "supplier", foreignKey: "supplier_id"});
+  suppliers.hasMany(products, { as: "products", foreignKey: "supplier_id"});
+  supplies.belongsTo(suppliers, { as: "supplier", foreignKey: "supplier_id"});
+  suppliers.hasMany(supplies, { as: "supplies", foreignKey: "supplier_id"});
   recipes.belongsTo(supplies, { as: "supply", foreignKey: "supply_id"});
   supplies.hasMany(recipes, { as: "recipes", foreignKey: "supply_id"});
   appointments.belongsTo(users, { as: "user", foreignKey: "user_id"});
@@ -123,6 +141,7 @@ function initModels(sequelize) {
   user_sessions.belongsTo(users, { as: "user", foreignKey: "user_id"});
   users.hasMany(user_sessions, { as: "user_sessions", foreignKey: "user_id"});
 
+  // Associations for Inventory Polymorphic Relationship
   products.hasOne(inventory, {
     foreignKey: 'item_id',
     constraints: false,
@@ -131,6 +150,13 @@ function initModels(sequelize) {
     },
     as: 'stock'
   });
+
+  inventory.belongsTo(products, {
+    foreignKey: 'item_id',
+    constraints: false,
+    as: 'product'
+  });
+
 
   return {
     appointments,
@@ -151,6 +177,8 @@ function initModels(sequelize) {
     platform_admins,
     platform_audit_logs,
     platform_sessions,
+    product_brands,
+    product_categories,
     product_variants,
     products,
     promotion_products,
@@ -158,6 +186,7 @@ function initModels(sequelize) {
     recipes,
     saas_invoices,
     saas_plans,
+    suppliers,
     supplies,
     user_sessions,
     users,

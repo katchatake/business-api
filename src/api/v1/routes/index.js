@@ -9,6 +9,9 @@ const branchesRouter = require('../modules/branches/branches.routes');
 const promotionsRouter = require('../modules/promotions/promotions.routes');
 const ordersRouter = require('../modules/orders/orders.routes');
 const inventoryRouter = require('../modules/inventory/inventory.routes'); // New import
+const productCategoriesRouter = require('../modules/product-categories/product-categories.routes');
+const productBrandsRouter = require('../modules/product-brands/product-brands.routes');
+const suppliersRouter = require('../modules/suppliers/suppliers.routes');
 
 const router = express.Router();
 
@@ -23,6 +26,9 @@ router.use('/branches', branchesRouter);
 router.use('/promotions', promotionsRouter);
 router.use('/orders', ordersRouter);
 router.use('/inventory', inventoryRouter); // New route
+router.use('/product-categories', productCategoriesRouter);
+router.use('/product-brands', productBrandsRouter);
+router.use('/suppliers', suppliersRouter);
 
 module.exports = router;
 

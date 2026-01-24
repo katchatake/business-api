@@ -1,6 +1,7 @@
 const Joi = require('joi');
 
 const id = Joi.number().integer();
+const optionalId = Joi.number().integer().allow(null);
 const name = Joi.string().max(150);
 const productType = Joi.string().valid('SIMPLE', 'VARIANT_PARENT', 'SERVICE');
 const price = Joi.number().precision(2);
@@ -16,6 +17,9 @@ const createProductSchema = Joi.object({
   price: price.required(),
   cost: cost.optional(),
   sku: sku.optional(),
+  category_id: optionalId.optional(),
+  brand_id: optionalId.optional(),
+  supplier_id: optionalId.optional(),
   sat_product_code: satProductCode.optional().default('01010101'),
   sat_unit_code: satUnitCode.optional().default('H87'),
   tax_object: taxObject.optional().default('02'),
@@ -26,6 +30,9 @@ const updateProductSchema = Joi.object({
   price: price.optional(),
   cost: cost.optional(),
   sku: sku.optional(),
+  category_id: optionalId.optional(),
+  brand_id: optionalId.optional(),
+  supplier_id: optionalId.optional(),
   sat_product_code: satProductCode.optional(),
   sat_unit_code: satUnitCode.optional(),
   tax_object: taxObject.optional(),

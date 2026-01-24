@@ -138,6 +138,17 @@ ALTER TABLE products
 ADD COLUMN taxes_config JSON NULL
 COMMENT 'Ej: [{"code": "002", "rate": 0.16, "factor": "Tasa"}]';
 
+ALTER TABLE `products`
+        ADD COLUMN `category_id` INT NULL AFTER `sku`,
+        ADD COLUMN `brand_id` INT NULL AFTER `category_id`,
+        ADD COLUMN `supplier_id` INT NULL AFTER `brand_id`,
+        ADD CONSTRAINT `fk_prod_category` FOREIGN KEY (`category_id`)
+      REFERENCES `product_categories` (`id`) ON DELETE SET NULL,
+        ADD CONSTRAINT `fk_prod_brand` FOREIGN KEY (`brand_id`) REFERENCES
+      `product_brands` (`id`) ON DELETE SET NULL,
+        ADD CONSTRAINT `fk_prod_supplier` FOREIGN KEY (`supplier_id`)
+      REFERENCES `suppliers` (`id`) ON DELETE SET NULL;
+
 CREATE TABLE product_variants ( -- Para Ropa/Zapatos
     id INT PRIMARY KEY AUTO_INCREMENT,
     product_id INT NOT NULL,
@@ -155,6 +166,11 @@ CREATE TABLE supplies ( -- Insumos Restaurante
     cost DECIMAL(10,2),
     FOREIGN KEY (business_id) REFERENCES businesses(id)
 );
+
+ALTER TABLE `supplies`
+        ADD COLUMN `supplier_id` INT NULL AFTER `cost`,
+       ADD CONSTRAINT `fk_supply_supplier` FOREIGN KEY (`supplier_id`)
+      REFERENCES `suppliers` (`id`) ON DELETE SET NULL;
 
 CREATE TABLE recipes ( -- Recetas
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -415,6 +431,43 @@ CREATE TABLE saas_invoices (
     FOREIGN KEY (business_id) REFERENCES businesses(id)
 );
 
+
+CREATE TABLE `product_categories` (
+        `id` INT PRIMARY KEY AUTO_INCREMENT,
+        `business_id` INT NOT NULL,
+        `name` VARCHAR(100) NOT NULL,
+        `description` TEXT NULL,
+        CONSTRAINT `fk_pcat_business` FOREIGN KEY (`business_id`)
+      REFERENCES `businesses` (`id`) ON DELETE CASCADE,
+        UNIQUE KEY `uk_pcat_business_name` (`business_id`, `name`)
+    ) COMMENT='Categorías para organizar productos y servicios dentro de
+      un negocio.';
+
+    -- Tabla para Marcas de Productos (Ej: Nike, Coca-Cola, L''Oréal)
+    CREATE TABLE `product_brands` (
+        `id` INT PRIMARY KEY AUTO_INCREMENT,
+        `business_id` INT NOT NULL,
+        `name` VARCHAR(100) NOT NULL,
+        CONSTRAINT `fk_pbrand_business` FOREIGN KEY (`business_id`)
+      REFERENCES `businesses` (`id`) ON DELETE CASCADE,
+        UNIQUE KEY `uk_pbrand_business_name` (`business_id`, `name`)
+    ) COMMENT='Marcas de los productos que vende un negocio.';
+
+    -- Tabla para Proveedores (de productos o insumos)
+    CREATE TABLE `suppliers` (
+        `id` INT PRIMARY KEY AUTO_INCREMENT,
+        `business_id` INT NOT NULL,
+        `name` VARCHAR(150) NOT NULL,
+        `contact_person` VARCHAR(150) NULL,
+        `phone` VARCHAR(50) NULL,
+        `email` VARCHAR(100) NULL,
+        `address` TEXT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT `fk_supplier_business` FOREIGN KEY (`business_id`)
+      REFERENCES `businesses` (`id`) ON DELETE CASCADE
+    ) COMMENT='Proveedores de productos e insumos para el negocio.';
+
+
 ```
 
 ---
@@ -486,6 +539,33 @@ npm run db:generate-models
 ```
 
 Este comando lee la configuración de la base de datos desde el archivo `.env`.
+
+#### 3.4.1. Ajuste Manual para Relaciones Polimórficas
+
+**¡IMPORTANTE!** El comando `npm run db:generate-models` sobreescribirá cualquier cambio manual en el archivo `src/models/init-models.js`. La herramienta `sequelize-auto` no es capaz de generar correctamente las relaciones polimórficas complejas, como la que existe entre `products` y `inventory`.
+
+Después de ejecutar el comando de generación, se debe **modificar manualmente** el archivo `src/models/init-models.js` y añadir las siguientes asociaciones justo antes de la línea `return { ... };`:
+
+```javascript
+  // Associations for Inventory Polymorphic Relationship
+  products.hasOne(inventory, {
+    foreignKey: 'item_id',
+    constraints: false,
+    scope: {
+      item_type: 'PRODUCT'
+    },
+    as: 'stock'
+  });
+
+  inventory.belongsTo(products, {
+    foreignKey: 'item_id',
+    constraints: false,
+    as: 'product'
+  });
+```
+
+Este código define la relación `hasOne` que permite incluir el stock de un producto para una sucursal específica y es crucial para el funcionamiento del listado de productos.
+
 
 ### 3.5. Scripts NPM
 
@@ -728,54 +808,54 @@ Permite la gestión del catálogo de productos y servicios del negocio.
 
 ```json
 [
-    {
-        "id": 102,
-        "business_id": 1,
-        "name": "Coca-Cola 600ml No Retornable",
-        "product_type": "SIMPLE",
-        "price": "18.00",
-        "cost": "11.50",
-        "sku": "7501055300077",
-        "sat_product_code": "50202301",
-        "sat_unit_code": "H87",
-        "tax_object": "02",
-        "taxes_config": null,
-        "stock": {
-            "quantity": "94.0000"
-        }
-    },
-    {
-        "id": 105,
-        "business_id": 1,
-        "name": "Jamón de Pavo (por Kg)",
-        "product_type": "SIMPLE",
-        "price": "220.00",
-        "cost": "150.00",
-        "sku": "ABDP-JAMON-PAVO",
-        "sat_product_code": "50111802",
-        "sat_unit_code": "KGM",
-        "tax_object": "02",
-        "taxes_config": null,
-        "stock": {
-            "quantity": "4.3000"
-        }
-    },
-    {
-        "id": 108,
-        "business_id": 1,
-        "name": "Producto sin Stock",
-        "product_type": "SIMPLE",
-        "price": "50.00",
-        "cost": "25.00",
-        "sku": "NO-STOCK-ITEM",
-        "sat_product_code": "01010101",
-        "sat_unit_code": "H87",
-        "tax_object": "02",
-        "taxes_config": null,
-        "stock": {
-            "quantity": "0.0000"
-        }
+  {
+    "id": 102,
+    "business_id": 1,
+    "name": "Coca-Cola 600ml No Retornable",
+    "product_type": "SIMPLE",
+    "price": "18.00",
+    "cost": "11.50",
+    "sku": "7501055300077",
+    "sat_product_code": "50202301",
+    "sat_unit_code": "H87",
+    "tax_object": "02",
+    "taxes_config": null,
+    "stock": {
+      "quantity": "94.0000"
     }
+  },
+  {
+    "id": 105,
+    "business_id": 1,
+    "name": "Jamón de Pavo (por Kg)",
+    "product_type": "SIMPLE",
+    "price": "220.00",
+    "cost": "150.00",
+    "sku": "ABDP-JAMON-PAVO",
+    "sat_product_code": "50111802",
+    "sat_unit_code": "KGM",
+    "tax_object": "02",
+    "taxes_config": null,
+    "stock": {
+      "quantity": "4.3000"
+    }
+  },
+  {
+    "id": 108,
+    "business_id": 1,
+    "name": "Producto sin Stock",
+    "product_type": "SIMPLE",
+    "price": "50.00",
+    "cost": "25.00",
+    "sku": "NO-STOCK-ITEM",
+    "sat_product_code": "01010101",
+    "sat_unit_code": "H87",
+    "tax_object": "02",
+    "taxes_config": null,
+    "stock": {
+      "quantity": "0.0000"
+    }
+  }
 ]
 ```
 
@@ -785,13 +865,13 @@ Permite la gestión del catálogo de productos y servicios del negocio.
 - **Permisos:** `OWNER`, `MANAGER`.
 - **Descripción:** Actualiza los detalles de un producto existente. Permite modificar uno o varios campos del producto. Este endpoint es válido para cualquier giro de negocio y no aplica las restricciones de `product_type` o `businessCategory` que se usan en la creación.
 - **Parámetros de Ruta:**
-    - `id` (obligatorio): ID numérico del producto a actualizar.
+  - `id` (obligatorio): ID numérico del producto a actualizar.
 
 ##### Payload de Ejemplo (Actualizar Precio y SKU)
 
 ```json
 {
-  "price": 20.00,
+  "price": 20.0,
   "sku": "7501055300077-V2"
 }
 ```
@@ -931,11 +1011,11 @@ El corazón del POS, permite registrar ventas aplicando la lógica de negocio.
   "payments": [
     {
       "payment_method": "CASH",
-      "amount": 250.00
+      "amount": 250.0
     },
     {
       "payment_method": "CARD",
-      "amount": 100.00
+      "amount": 100.0
     }
   ]
 }
@@ -1016,12 +1096,12 @@ El corazón del POS, permite registrar ventas aplicando la lógica de negocio.
 - **Permisos:** `OWNER`, `MANAGER`, `CASHIER`.
 - **Descripción:** Devuelve una lista de órdenes para el negocio del usuario autenticado. Permite filtrar por sucursal, cliente, estado, tipo de orden y rango de fechas.
 - **Parámetros de Consulta:**
-    - `branchId` (opcional): ID numérico de la sucursal.
-    - `customerId` (opcional): ID numérico del cliente.
-    - `status` (opcional): Estado de la orden (`PENDING`, `COMPLETED`, `CANCELLED`).
-    - `orderType` (opcional): Tipo de orden (`INSTORE`, `TAKEAWAY`, `DINE_IN`).
-    - `startDate` (opcional): Fecha de inicio para filtrar órdenes (formato ISO 8601).
-    - `endDate` (opcional): Fecha de fin para filtrar órdenes (formato ISO 8601).
+  - `branchId` (opcional): ID numérico de la sucursal.
+  - `customerId` (opcional): ID numérico del cliente.
+  - `status` (opcional): Estado de la orden (`PENDING`, `COMPLETED`, `CANCELLED`).
+  - `orderType` (opcional): Tipo de orden (`INSTORE`, `TAKEAWAY`, `DINE_IN`).
+  - `startDate` (opcional): Fecha de inicio para filtrar órdenes (formato ISO 8601).
+  - `endDate` (opcional): Fecha de fin para filtrar órdenes (formato ISO 8601).
 
 ##### Ejemplo de Uso
 
@@ -1097,14 +1177,14 @@ Permite la gestión de los niveles de stock de los productos en las diferentes s
 - **Permisos:** `OWNER`, `MANAGER`.
 - **Descripción:** Ajusta la cantidad de stock de un producto específico en una sucursal determinada. Permite sumar o restar unidades/kilogramos al inventario actual. Si no existe un registro de inventario para el producto en esa sucursal, se creará uno con la cantidad del ajuste.
 - **Parámetros de Ruta:**
-    - `productId` (obligatorio): ID numérico del producto.
-    - `branchId` (obligatorio): ID numérico de la sucursal.
+  - `productId` (obligatorio): ID numérico del producto.
+  - `branchId` (obligatorio): ID numérico de la sucursal.
 
 ##### Payload de Ejemplo (Ajuste Positivo - Entrada de 50 piezas)
 
 ```json
 {
-  "adjustment": 50.0000,
+  "adjustment": 50.0,
   "reason": "Entrada por compra a proveedor X"
 }
 ```
@@ -1113,7 +1193,7 @@ Permite la gestión de los niveles de stock de los productos en las diferentes s
 
 ```json
 {
-  "adjustment": -0.5000,
+  "adjustment": -0.5,
   "reason": "Merma por producto dañado"
 }
 ```

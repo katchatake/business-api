@@ -38,6 +38,30 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(50),
       allowNull: true
     },
+    category_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'product_categories',
+        key: 'id'
+      }
+    },
+    brand_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'product_brands',
+        key: 'id'
+      }
+    },
+    supplier_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'suppliers',
+        key: 'id'
+      }
+    },
     sat_product_code: {
       type: DataTypes.STRING(20),
       allowNull: true,
@@ -76,6 +100,27 @@ module.exports = function(sequelize, DataTypes) {
         using: "BTREE",
         fields: [
           { name: "business_id" },
+        ]
+      },
+      {
+        name: "fk_prod_category",
+        using: "BTREE",
+        fields: [
+          { name: "category_id" },
+        ]
+      },
+      {
+        name: "fk_prod_brand",
+        using: "BTREE",
+        fields: [
+          { name: "brand_id" },
+        ]
+      },
+      {
+        name: "fk_prod_supplier",
+        using: "BTREE",
+        fields: [
+          { name: "supplier_id" },
         ]
       },
     ]

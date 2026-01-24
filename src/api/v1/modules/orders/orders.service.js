@@ -240,7 +240,6 @@ const listOrders = async (businessId, filters) => {
     include: [
       { model: models.order_items, as: 'order_items' },
       { model: models.order_payments, as: 'order_payments' },
-      { model: models.branches, as: 'branch', attributes: ['id', 'name'] }
     ],
     order: [['created_date', 'DESC']],
     // Add pagination options if needed:

@@ -55,6 +55,21 @@ const listByBusiness = async (businessId, userBranchId, queryBranchId) => {
         where: { branch_id: targetBranchId },
         required: false, // Use LEFT JOIN to include products without an inventory record
         attributes: ['quantity'] // Only include the quantity field
+      },
+      {
+        model: models.product_categories,
+        as: 'category',
+        attributes: ['id', 'name'],
+      },
+      {
+        model: models.product_brands,
+        as: 'brand',
+        attributes: ['id', 'name'],
+      },
+      {
+        model: models.suppliers,
+        as: 'supplier',
+        attributes: ['id', 'name'],
       }
     ],
     order: [['name', 'ASC']],
