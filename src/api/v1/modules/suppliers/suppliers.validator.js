@@ -9,18 +9,18 @@ const address = Joi.string().allow(null, '');
 
 const createSupplierSchema = Joi.object({
   name: name.required(),
-  contact_person: contactPerson,
-  phone: phone,
-  email: email,
-  address: address,
+  contact_person: contactPerson.optional(),
+  phone: phone.optional(),
+  email: email.optional(),
+  address: address.optional(),
 });
 
 const updateSupplierSchema = Joi.object({
   name: name.optional(),
-  contact_person: contactPerson,
-  phone: phone,
-  email: email,
-  address: address,
+  contact_person: contactPerson.optional(),
+  phone: phone.optional(),
+  email: email.optional(),
+  address: address.optional(),
 });
 
 const getSupplierSchema = Joi.object({

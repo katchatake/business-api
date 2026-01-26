@@ -15,9 +15,9 @@ router.get('/',
   checkJwt,
   async (req, res, next) => {
     try {
-      const { business_id } = req.user;
-      const suppliers = await service.findAll(business_id);
-      res.json(suppliers);
+      const { businessId } = req.user;
+      const suppliers = await service.findAll(businessId);
+      res.json({ data: suppliers });
     } catch (error) {
       next(error);
     }
@@ -30,8 +30,8 @@ router.get('/:id',
   async (req, res, next) => {
     try {
       const { id } = req.params;
-      const { business_id } = req.user;
-      const supplier = await service.findOne(id, business_id);
+      const { businessId } = req.user;
+      const supplier = await service.findOne(id, businessId);
       res.json(supplier);
     } catch (error) {
       next(error);
@@ -45,8 +45,8 @@ router.post('/',
   async (req, res, next) => {
     try {
       const body = req.body;
-      const { business_id } = req.user;
-      const newSupplier = await service.create(body, business_id);
+      const { businessId } = req.user;
+      const newSupplier = await service.create(body, businessId);
       res.status(201).json(newSupplier);
     } catch (error) {
       next(error);
@@ -62,8 +62,8 @@ router.patch('/:id',
     try {
       const { id } = req.params;
       const body = req.body;
-      const { business_id } = req.user;
-      const updatedSupplier = await service.update(id, body, business_id);
+      const { businessId } = req.user;
+      const updatedSupplier = await service.update(id, body, businessId);
       res.json(updatedSupplier);
     } catch (error) {
       next(error);
@@ -77,8 +77,8 @@ router.delete('/:id',
   async (req, res, next) => {
     try {
       const { id } = req.params;
-      const { business_id } = req.user;
-      await service.remove(id, business_id);
+      const { businessId } = req.user;
+      await service.remove(id, businessId);
       res.status(201).json({ id });
     } catch (error) {
       next(error);
