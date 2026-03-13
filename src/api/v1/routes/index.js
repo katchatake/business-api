@@ -12,6 +12,8 @@ const inventoryRouter = require('../modules/inventory/inventory.routes'); // New
 const productCategoriesRouter = require('../modules/product-categories/product-categories.routes');
 const productBrandsRouter = require('../modules/product-brands/product-brands.routes');
 const suppliersRouter = require('../modules/suppliers/suppliers.routes');
+const customersRouter = require('../modules/customers/customers.routes');
+const dashboardRouter = require('../modules/dashboard/dashboard.routes');
 
 const router = express.Router();
 
@@ -29,6 +31,8 @@ router.use('/inventory', inventoryRouter); // New route
 router.use('/product-categories', productCategoriesRouter);
 router.use('/product-brands', productBrandsRouter);
 router.use('/suppliers', suppliersRouter);
+router.use('/customers', customersRouter);
+router.use('/dashboard', dashboardRouter);
 
 module.exports = router;
 

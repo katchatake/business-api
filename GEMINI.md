@@ -1212,3 +1212,76 @@ Permite la gestión de los niveles de stock de los productos en las diferentes s
   }
 }
 ```
+
+---
+
+### 4.9. Módulo de Dashboard (`Dashboard`)
+
+Proporciona endpoints para visualizar métricas y resúmenes clave del negocio.
+
+#### 4.9.1. Obtener Resumen de Ventas
+
+- **Endpoint:** `GET /api/v1/dashboard/sales-summary`
+- **Permisos:** `OWNER`, `MANAGER`.
+- **Descripción:** Devuelve un resumen de las ventas de las órdenes completadas del día actual y las compara con las del día anterior para una sucursal específica.
+- **Parámetros de Consulta:** `?branchId=<id>` (opcional). Si no se provee, se usa la sucursal asignada al usuario en sesión.
+
+##### Ejemplo de Uso
+
+`GET /api/v1/dashboard/sales-summary?branchId=1`
+
+##### Ejemplo de Respuesta (`200 OK`)
+
+```json
+{
+  "message": "Sales summary retrieved successfully",
+  "data": {
+    "todaySales": 5480.50,
+    "previousDaySales": 4120.00,
+    "percentageChange": 33.02,
+    "trend": "up",
+    "branch": {
+      "id": 1,
+      "name": "Sucursal Principal"
+    }
+  }
+}
+```
+
+---
+
+### 4.10. Módulo de Clientes (`Customers`)
+
+Permite la gestión de los clientes de un negocio.
+
+#### 4.10.1. Crear un Cliente
+
+- **Endpoint:** `POST /api/v1/customers`
+- **Permisos:** `OWNER`, `MANAGER`, `CASHIER`, `WAITER`.
+- **Descripción:** Crea un nuevo cliente para el negocio del usuario autenticado.
+
+##### Payload de Ejemplo (Crear Cliente)
+
+```json
+{
+  "name": "Juan Perez",
+  "rfc": "PEPJ800101ABC",
+  "legalName": "Juan Perez",
+  "emailInvoice": "juan.perez@example.com"
+}
+```
+
+#### 4.10.2. Actualizar un Cliente
+
+- **Endpoint:** `PATCH /api/v1/customers/{id}`
+- **Permisos:** `OWNER`, `MANAGER`, `CASHIER`, `WAITER`.
+- **Descripción:** Actualiza los datos de un cliente existente.
+
+##### Payload de Ejemplo (Actualizar Cliente)
+
+```json
+{
+  "name": "Juan Carlos Perez",
+  "emailInvoice": "juan.c.perez@newdomain.com"
+}
+```

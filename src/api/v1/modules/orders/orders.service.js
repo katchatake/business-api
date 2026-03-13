@@ -167,7 +167,7 @@ const create = async (orderData, userInfo) => {
         totalPaidAmount += parseFloat(payment.amount);
       }
 
-      if (totalPaidAmount >= finalTotal) {
+      if (totalPaidAmount >= subtotal) {
         orderStatus = 'COMPLETED';
       } else {
         // If payments are provided but don't cover the full amount, it's still pending or partially paid
