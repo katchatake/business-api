@@ -141,6 +141,10 @@ function initModels(sequelize) {
   user_sessions.belongsTo(users, { as: "user", foreignKey: "user_id"});
   users.hasMany(user_sessions, { as: "user_sessions", foreignKey: "user_id"});
 
+  // Association between order_items and products
+  order_items.belongsTo(products, { as: "product", foreignKey: "product_id"});
+  products.hasMany(order_items, { as: "order_items", foreignKey: "product_id"});
+
   // Associations for Inventory Polymorphic Relationship
   products.hasOne(inventory, {
     foreignKey: 'item_id',

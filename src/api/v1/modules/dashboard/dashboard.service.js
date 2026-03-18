@@ -11,7 +11,12 @@ const logger = require('../../../../utils/logger');
  * @param {Date} endDate - The end of the date range.
  * @returns {Promise<number>} The total sales amount.
  */
-const calculateTotalSales = async (businessId, branchId, startDate, endDate) => {
+const calculateTotalSales = async (
+  businessId,
+  branchId,
+  startDate,
+  endDate
+) => {
   const totalSales = await models.orders.sum('subtotal', {
     where: {
       business_id: businessId,
@@ -36,7 +41,9 @@ const getSalesSummary = async (businessId, userBranchId, queryBranchId) => {
   const targetBranchId = queryBranchId || userBranchId;
 
   if (!targetBranchId) {
-    throw boom.badRequest('A branch ID must be provided either in your user session or as a query parameter.');
+    throw boom.badRequest(
+      'A branch ID must be provided either in your user session or as a query parameter.'
+    );
   }
 
   // Security check: ensure the target branch belongs to the user's business
@@ -48,7 +55,9 @@ const getSalesSummary = async (businessId, userBranchId, queryBranchId) => {
     throw boom.forbidden('You do not have access to this branch.');
   }
 
-  logger.info(`Fetching sales summary for business ${businessId} and branch ${targetBranchId}`);
+  logger.info(
+    `Fetching sales summary for business ${businessId} and branch ${targetBranchId}`
+  );
 
   // Define date ranges
   const today = new Date();
@@ -63,13 +72,19 @@ const getSalesSummary = async (businessId, userBranchId, queryBranchId) => {
   // Calculate sales in parallel
   const [todaySales, previousDaySales] = await Promise.all([
     calculateTotalSales(businessId, targetBranchId, todayStart, todayEnd),
-    calculateTotalSales(businessId, targetBranchId, yesterdayStart, yesterdayEnd),
+    calculateTotalSales(
+      businessId,
+      targetBranchId,
+      yesterdayStart,
+      yesterdayEnd
+    ),
   ]);
 
   // Calculate percentage change
   let percentageChange = 0;
   if (previousDaySales > 0) {
-    percentageChange = ((todaySales - previousDaySales) / previousDaySales) * 100;
+    percentageChange =
+      ((todaySales - previousDaySales) / previousDaySales) * 100;
   } else if (todaySales > 0) {
     percentageChange = 100; // If yesterday was 0 and today is > 0, it's a 100% increase from nothing.
   }
@@ -93,6 +108,68 @@ const getSalesSummary = async (businessId, userBranchId, queryBranchId) => {
   };
 };
 
+const getSalesByRanges = async ({
+  businessId,
+  branchId,
+  startDate,
+  endDate,
+}) => {
+  const sales = await models.order_items.findAll({
+    attributes: [
+      [sequelize.col('product.category.name'), 'categoryName'],
+      [sequelize.col('product.brand.name'), 'brandName'],
+      [sequelize.fn('SUM', sequelize.col('order_items.unit_price')), 'totalSales'],
+    ],
+    include: [
+      {
+        model: models.orders,
+        as: 'order',
+        attributes: [],
+        where: {
+          status: 'COMPLETED',
+          business_id: businessId,
+          branch_id: branchId,
+          created_date: {
+            [Op.between]: [startDate, endDate],
+          },
+        },
+        required: true,
+      },
+      {
+        model: models.products,
+        as: 'product',
+        attributes: [],
+        required: true,
+        include: [
+          {
+            model: models.product_categories,
+            as: 'category',
+            attributes: [],
+            required: true,
+          },
+          {
+            model: models.product_brands,
+            as: 'brand',
+            attributes: [],
+            required: true,
+          },
+        ],
+      },
+    ],
+    group: [
+      sequelize.col('product.category.name'),
+      sequelize.col('product.brand.name'),
+    ],
+    raw: true,
+  });
+
+  return sales.map((sale) => ({
+    ...sale,
+    totalSales: parseFloat(sale.totalSales),
+  }));
+};
+
 module.exports = {
   getSalesSummary,
+  getSalesByRanges,
 };

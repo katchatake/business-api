@@ -1,11 +1,18 @@
 const Joi = require('joi');
 
-const branchId = Joi.number().integer();
+const id = Joi.number().integer();
 
 const getSalesSummarySchema = Joi.object({
-  branchId: branchId.optional(),
+  branchId: id.optional(),
+});
+
+const getSalesByRangesSchema = Joi.object({
+  branchId: id.optional(),
+  startDate: Joi.date().iso().optional(),
+  endDate: Joi.date().iso().optional(),
 });
 
 module.exports = {
   getSalesSummarySchema,
+  getSalesByRangesSchema,
 };

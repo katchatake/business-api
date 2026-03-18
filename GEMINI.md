@@ -1248,6 +1248,46 @@ Proporciona endpoints para visualizar métricas y resúmenes clave del negocio.
 }
 ```
 
+
+#### 4.9.2. Obtener Ventas Agrupadas por Rango
+
+- **Endpoint:** `GET /api/v1/dashboard/sales-by-ranges`
+- **Permisos:** `OWNER`, `MANAGER`.
+- **Descripción:** Devuelve el total de ventas de órdenes completadas, agrupado por categoría y marca de producto, dentro de un rango de fechas específico.
+- **Parámetros de Consulta:**
+  - `branchId` (opcional): ID numérico de la sucursal. Si no se provee, se usa la sucursal asignada al usuario en sesión.
+  - `startDate` (opcional): Fecha de inicio del rango (formato ISO 8601). Si se omite, se usa el inicio del día actual.
+  - `endDate` (opcional): Fecha de fin del rango (formato ISO 8601). Si se omite, se usa el fin del día actual.
+
+##### Ejemplo de Uso
+
+`GET /api/v1/dashboard/sales-by-ranges?branchId=1&startDate=2026-03-01T00:00:00Z&endDate=2026-03-12T23:59:59Z`
+
+##### Ejemplo de Respuesta (`200 OK`)
+
+```json
+{
+  "message": "Sales by ranges retrieved successfully",
+  "data": [
+    {
+      "categoryName": "Bebidas",
+      "brandName": "Coca-Cola",
+      "totalSales": 4550.75
+    },
+    {
+      "categoryName": "Lácteos",
+      "brandName": "Lala",
+      "totalSales": 2100.00
+    },
+    {
+      "categoryName": "Bebidas",
+      "brandName": "PepsiCo",
+      "totalSales": 1500.50
+    }
+  ]
+}
+```
+
 ---
 
 ### 4.10. Módulo de Clientes (`Customers`)
