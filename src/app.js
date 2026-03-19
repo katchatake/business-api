@@ -26,8 +26,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
-
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
