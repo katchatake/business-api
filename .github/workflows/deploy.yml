@@ -19,6 +19,6 @@ jobs:
             cd ~/projects/business/business-api
             git pull origin main
             # Reconstruir solo si hubo cambios en el Dockerfile o dependencias
-            docker compose up -d --build business-api
+            docker compose up -d --build api
             # Limpiar imágenes huérfanas para no llenar el disco de IONOS
             docker image prune -f
