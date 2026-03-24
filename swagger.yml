@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: SaaS POS API
   description: API para el sistema Punto de Venta Multi-Tenant Polimórfico.
-  version: 1.0.0
+  version: 1.0.1
 
 servers:
   - url: /api/v1
@@ -194,11 +194,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginPayload'
+              $ref: "#/components/schemas/LoginPayload"
       responses:
-        '200':
+        "200":
           description: Login exitoso, retorna tokens.
-        '401':
+        "401":
           description: Credenciales inválidas.
 
   /businesses:
@@ -211,11 +211,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterBusinessPayload'
+              $ref: "#/components/schemas/RegisterBusinessPayload"
       responses:
-        '201':
+        "201":
           description: Negocio registrado exitosamente.
-        '400':
+        "400":
           description: Datos inválidos.
 
   /business-types:
@@ -229,11 +229,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateBusinessTypePayload'
+              $ref: "#/components/schemas/CreateBusinessTypePayload"
       responses:
-        '201':
+        "201":
           description: Tipo de negocio creado.
-        '403':
+        "403":
           description: Rol no autorizado.
 
   /products:
@@ -249,7 +249,7 @@ paths:
             type: integer
           description: ID de la sucursal para validar acceso.
       responses:
-        '200':
+        "200":
           description: Lista de productos.
     post:
       summary: Crear un nuevo producto o servicio
@@ -261,11 +261,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateProductPayload'
+              $ref: "#/components/schemas/CreateProductPayload"
       responses:
-        '201':
+        "201":
           description: Producto creado.
-        '403':
+        "403":
           description: Permisos insuficientes (rol o categoría de negocio).
 
   /appointments:
@@ -294,7 +294,7 @@ paths:
             type: string
             format: date-time
       responses:
-        '200':
+        "200":
           description: Lista de citas.
     post:
       summary: Crear una nueva cita
@@ -306,11 +306,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateAppointmentPayload'
+              $ref: "#/components/schemas/CreateAppointmentPayload"
       responses:
-        '201':
+        "201":
           description: Cita creada.
-        '409':
+        "409":
           description: Conflicto de horario.
 
   /promotions:
@@ -320,7 +320,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: Lista de promociones del negocio.
     post:
       summary: Crear una nueva promoción
@@ -332,11 +332,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreatePromotionPayload'
+              $ref: "#/components/schemas/CreatePromotionPayload"
       responses:
-        '201':
+        "201":
           description: Promoción creada.
-        '400':
+        "400":
           description: Datos inválidos (ej. un producto no existe).
 
   /orders:
@@ -353,9 +353,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateOrderPayload'
+              $ref: "#/components/schemas/CreateOrderPayload"
       responses:
-        '201':
+        "201":
           description: Orden creada exitosamente.
-        '400':
+        "400":
           description: Datos inválidos (ej. un producto no existe).
