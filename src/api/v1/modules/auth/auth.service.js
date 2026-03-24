@@ -70,7 +70,7 @@ const login = async (req) => {
   // 4. Save User Session
   const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 7); // Assuming 7d expiry
+  expiresAt.setDate(expiresAt.getDate() + 1); // Assuming 7d expiry
 
   await models.user_sessions.create({
     user_id: user.id,
@@ -103,6 +103,7 @@ const login = async (req) => {
     },
     accessToken,
     refreshToken,
+    expiresAt: expiresAt.toISOString(),
   };
 };
 
