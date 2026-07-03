@@ -14,6 +14,15 @@ const loginSchema = Joi.object({
   }),
 });
 
+const refreshSchema = Joi.object({
+  refreshToken: Joi.string().required().messages({
+    'string.base': 'El token de refresco debe ser un texto.',
+    'string.empty': 'El token de refresco no puede estar vacío.',
+    'any.required': 'El token de refresco es obligatorio.',
+  }),
+});
+
 module.exports = {
   loginSchema,
+  refreshSchema,
 };

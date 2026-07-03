@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { Op } = require('sequelize');
 const { models } = require('../../../../config/database');
 const logger = require('../../../../utils/logger');
 require('dotenv').config();
@@ -107,6 +108,98 @@ const login = async (req) => {
   };
 };
 
+const refresh = async (req) => {
+  const { refreshToken } = req.body;
+  logger.info('Attempting token refresh');
+
+  let decoded;
+  try {
+    decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+  } catch (error) {
+    throw boom.unauthorized('Invalid or expired refresh token');
+  }
+
+  const userId = decoded.sub;
+
+  // Find all active sessions for the user to match the refresh token hash
+  const activeSessions = await models.user_sessions.findAll({
+    where: {
+      user_id: userId,
+      is_revoked: false,
+      expires_at: {
+        [Op.gt]: new Date(),
+      },
+    },
+  });
+
+  let matchedSession = null;
+  for (const session of activeSessions) {
+    const isMatch = await bcrypt.compare(refreshToken, session.refresh_token_hash);
+    if (isMatch) {
+      matchedSession = session;
+      break;
+    }
+  }
+
+  if (!matchedSession) {
+    throw boom.unauthorized('Session not found or revoked');
+  }
+
+  // Find user and include related business, type, category, and branch data
+  const user = await models.users.findOne({
+    where: { id: userId },
+    include: [
+      {
+        model: models.businesses,
+        as: 'business',
+        include: {
+          model: models.business_types,
+          as: 'business_type',
+          include: {
+            model: models.business_categories,
+            as: 'category',
+          },
+        },
+      },
+      {
+        model: models.branches,
+        as: 'branch',
+      },
+    ],
+  });
+
+  if (!user || !user.business || !user.business.business_type || !user.business.business_type.category) {
+    throw boom.unauthorized('User not found or incomplete business data');
+  }
+
+  if (user.business.status === 'SUSPENDED_PAYMENT') {
+    throw boom.forbidden('Your business account is suspended due to payment issues. Please contact support.');
+  }
+  if (user.business.status === 'BANNED') {
+    throw boom.forbidden('Your business account has been banned. Please contact support.');
+  }
+
+  // Generate a new Access Token
+  const payload = {
+    userId: user.id,
+    sub: user.id,
+    role: user.role,
+    branchId: user.branch_id,
+    businessId: user.business.id,
+    businessSettings: user.business.settings,
+    businessType: user.business.business_type.name,
+    businessCategory: user.business.business_type.category.name,
+    businessStatus: user.business.status,
+  };
+
+  const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+
+  return {
+    accessToken,
+  };
+};
+
 module.exports = {
   login,
+  refresh,
 };

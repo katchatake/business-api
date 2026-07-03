@@ -25,6 +25,22 @@ const login = async (req, res, next) => {
   }
 };
 
+const refresh = async (req, res, next) => {
+  try {
+    const { accessToken } = await authService.refresh(req);
+    
+    res.status(200).json({
+      message: 'Token refreshed successfully',
+      data: {
+        accessToken,
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   login,
+  refresh,
 };
